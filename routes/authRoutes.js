@@ -58,7 +58,12 @@ router.post('/signup', async (req, res) => {
     const insertUserQuery = 'INSERT INTO users (email, password, name) VALUES ($1, $2, $3) RETURNING id, name';
     const newUser = await sql(insertUserQuery, [email, hashedPassword, name]);
 
-    const userId = newUser[0].id;
+    const userId = newUser[0].id; // Aquí se define userId
+
+    // Asegúrate de usar userId aquí
+    const walletQuery = 'INSERT INTO wallet (user_id, monto) VALUES ($1, $2)';
+    await sql(walletQuery, [userId, 100000.00]); // Cambié 'id' por 'userId'
+
     const token = jwt.sign({ userId, name, email }, CLAVE_SECRETA);
 
     res.status(201).cookie(AUTH_COOKIE_NAME, token, { httpOnly: true }).json({
