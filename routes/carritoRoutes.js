@@ -203,6 +203,17 @@ router.post('/purchase', auth, async (req, res) => {
     const nuevaCompra = await sql(nuevaCompraQuery, [userId, totalAmount, totalItems]);
     const { id: compraId, fecha, monto, cantidad } = nuevaCompra[0];
 
+    // Actualizar el stock de los productos comprados
+    const updateStockPromises = productosCarrito.map(async (item) => {
+      const updateStockQuery = `
+        UPDATE productos 
+        SET stock = stock - $1 
+        WHERE id = $2;
+      `;
+      await sql(updateStockQuery, [item.cantidad, item.id]);
+    });
+    await Promise.all(updateStockPromises);
+
     // Vaciar el carrito del usuario
     const vaciarCarritoQuery = 'DELETE FROM carrito_productos WHERE carrito_id = $1';
     await sql(vaciarCarritoQuery, [carritoId]);
